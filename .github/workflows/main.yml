@@ -1,7 +1,6 @@
 name: Build and Release
 permissions:
-  contents: read
-  releases: write
+  contents: write
   packages: write
 on:
   push:

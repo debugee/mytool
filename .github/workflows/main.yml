@@ -58,6 +58,36 @@ jobs:
             -DSOURCE_SHA256=${{ env.SHA }} \
             -P cmake/gen_brew_rb.cmake
 
+      - name: Publish formula to tap
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          PUBLISH_TOKEN: ${{ secrets.BREW }}
+          TAP_REPO: debugee/homebrew-mytap
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          REPO_NAME: ${{ env.REPO_NAME }}
+          TAG: ${{ env.TAG }}
+        run: |
+          set -euo pipefail
+          echo "Cloning tap repository ${TAP_REPO}"
+          git clone "https://x-access-token:${PUBLISH_TOKEN}@github.com/${TAP_REPO}.git" tap
+          cd tap
+          mkdir -p Formula
+          SRC="${GITHUB_WORKSPACE}/build/${REPO_NAME}.rb"
+          if [ -f "$SRC" ]; then
+            cp -f "$SRC" "Formula/${REPO_NAME}.rb"
+            git config user.email "actions@github.com"
+            git config user.name "GitHub Actions"
+            git add "Formula/${REPO_NAME}.rb"
+            if git diff --cached --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Update ${REPO_NAME} formula for ${TAG}"
+              git push origin HEAD
+            fi
+          else
+            echo "No ${REPO_NAME}.rb found at ${GITHUB_WORKSPACE}/build/ — skipping publish"
+          fi
+
       - name: Release
         uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')

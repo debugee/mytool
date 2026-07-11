@@ -7,3 +7,9 @@ project(mytool VERSION 3.0 LANGUAGES CXX)
 add_executable(mytool main.cpp)
 
 install(TARGETS mytool DESTINATION bin)
+
+set(CPACK_GENERATOR "ZIP")
+
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${PROJECT_VERSION}")
+
+include(CPack)
